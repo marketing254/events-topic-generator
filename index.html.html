@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventIQ – Intelligent Topic Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6366f1; --primary-light: #a5b4fc;
+      --secondary: #06b6d4; --bg: #080f1e; --bg-card: #111827; --bg-card2: #1a2540;
+      --border: #1e2d4a; --border-light: #2e3f5c; --text: #f1f5f9; --text-2: #94a3b8;
+      --text-3: #4b6282; --success: #10b981; --error: #ef4444; --warn: #f59e0b;
+      --gradient: linear-gradient(135deg,#6366f1 0%,#06b6d4 100%);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5; }
+
+    /* ── Header ── */
+    .header { position:sticky; top:0; z-index:50; background:rgba(8,15,30,.94); backdrop-filter:blur(14px); border-bottom:1px solid var(--border); padding:13px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .logo-text { font-size:20px; font-weight:800; letter-spacing:-.4px; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .logo-tag  { background:rgba(99,102,241,.18); border:1px solid rgba(99,102,241,.35); border-radius:4px; padding:2px 7px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--primary-light); }
+    .header-right { display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:wrap; }
+    .user-pill { background:var(--bg-card2); border:1px solid var(--border-light); border-radius:100px; padding:6px 14px; font-size:13px; display:flex; align-items:center; gap:8px; }
+    .dot { width:4px; height:4px; border-radius:50%; background:var(--border-light); }
+
+    /* ── Buttons ── */
+    .btn { display:inline-flex; align-items:center; gap:7px; padding:10px 20px; border-radius:8px; border:none; font-size:14px; font-weight:600; cursor:pointer; transition:all .18s; white-space:nowrap; }
+    .btn-primary { background:var(--gradient); color:#fff; box-shadow:0 4px 14px rgba(99,102,241,.3); }
+    .btn-primary:hover:not(:disabled) { opacity:.88; transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .btn-ghost { background:transparent; color:var(--text-2); border:1px solid var(--border-light); }
+    .btn-ghost:hover { border-color:var(--primary-light); color:var(--primary-light); }
+    .btn-warn  { background:rgba(245,158,11,.15); color:var(--warn); border:1px solid rgba(245,158,11,.3); }
+    .btn-warn:hover { background:rgba(245,158,11,.25); }
+    .btn-sm { padding:7px 13px; font-size:13px; border-radius:6px; }
+    .btn-lg { padding:13px 32px; font-size:16px; border-radius:10px; }
+
+    /* ── Layout ── */
+    .main { max-width:1080px; margin:0 auto; padding:36px 22px 80px; }
+
+    /* ── Sign-in ── */
+    .signin-wrap { max-width:420px; margin:52px auto 0; }
+    .signin-hero { text-align:center; margin-bottom:32px; }
+    .signin-hero h1 { font-size:40px; font-weight:900; letter-spacing:-1px; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .signin-hero p { color:var(--text-2); margin-top:10px; font-size:15px; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:26px; }
+    .card-title { font-size:17px; font-weight:700; margin-bottom:20px; }
+    .form-group { margin-bottom:16px; }
+    .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:6px; }
+    .form-control { width:100%; background:var(--bg); border:1px solid var(--border-light); border-radius:8px; padding:11px 13px; color:var(--text); font-size:14px; outline:none; transition:border-color .18s; }
+    .form-control:focus { border-color:var(--primary); }
+    .form-control::placeholder { color:var(--text-3); }
+    select.form-control option { background:var(--bg-card); }
+    .err-box { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.4); border-radius:8px; padding:10px 14px; font-size:13px; color:#fca5a5; margin-bottom:14px; }
+    .divider { height:1px; background:var(--border); margin:20px 0; }
+
+    /* ── Configure ── */
+    .page-title { font-size:25px; font-weight:800; margin-bottom:4px; }
+    .page-sub   { color:var(--text-2); font-size:14px; margin-bottom:32px; }
+    .sec-label  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-3); margin-bottom:11px; display:flex; align-items:center; gap:8px; }
+    .opt-badge  { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.3); border-radius:4px; padding:2px 7px; font-size:10px; font-weight:700; color:var(--warn); text-transform:uppercase; letter-spacing:.6px; }
+    .group-label { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:var(--text); background:var(--bg-card2); border:1px solid var(--border); border-radius:8px; padding:9px 13px; margin-bottom:11px; }
+    .config-section { margin-bottom:28px; }
+    .grid-sm { display:grid; grid-template-columns:repeat(auto-fill,minmax(146px,1fr)); gap:9px; }
+    .grid-3  { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+    .sel-card { background:var(--bg-card); border:2px solid var(--border); border-radius:10px; padding:13px 9px 11px; text-align:center; cursor:pointer; transition:all .18s; font-size:13px; font-weight:500; color:var(--text-2); }
+    .sel-card .ic  { font-size:24px; margin-bottom:5px; }
+    .sel-card .sub { font-size:11px; color:var(--text-3); margin-top:3px; }
+    .sel-card:hover { border-color:var(--primary-light); background:var(--bg-card2); color:var(--text); }
+    .sel-card.active { border-color:var(--primary); background:rgba(99,102,241,.12); color:var(--primary-light); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+    .sel-card.skip-card { border-style:dashed; border-color:rgba(245,158,11,.4); color:var(--warn); }
+    .sel-card.skip-card:hover { border-color:var(--warn); background:rgba(245,158,11,.08); }
+    .sel-card.skip-card.active { border-color:var(--warn); background:rgba(245,158,11,.12); color:var(--warn); box-shadow:0 0 0 3px rgba(245,158,11,.1); }
+    .generate-cta { text-align:center; padding:18px 0 4px; }
+    .hint { font-size:13px; color:var(--text-3); margin-top:9px; }
+
+    /* ── Steps ── */
+    .steps { display:flex; align-items:center; gap:6px; margin-bottom:28px; flex-wrap:wrap; }
+    .step-item { display:flex; align-items:center; gap:6px; }
+    .step-num { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0; }
+    .step-num.done  { background:var(--success); color:#fff; }
+    .step-num.now   { background:var(--gradient); color:#fff; box-shadow:0 0 0 3px rgba(99,102,241,.2); }
+    .step-num.later { background:var(--border); color:var(--text-3); }
+    .step-lbl { font-size:13px; color:var(--text-3); }
+    .step-lbl.now { color:var(--text); font-weight:600; }
+    .step-arrow { color:var(--border-light); font-size:16px; }
+
+    /* ── Topics ── */
+    .actions-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
+    .tag-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+    .tag { background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.28); border-radius:100px; padding:3px 10px; font-size:12px; font-weight:600; color:var(--primary-light); }
+    .tag.green { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.28); color:#6ee7b7; }
+    .tag.amber { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.28); color:var(--warn); }
+    .info-banner { background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.25); border-radius:10px; padding:11px 15px; font-size:13px; color:#6ee7b7; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+    .topic-card { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:14px; transition:border-color .18s,box-shadow .18s; }
+    .topic-card:hover { border-color:var(--border-light); box-shadow:0 5px 22px rgba(0,0,0,.28); }
+    .topic-card.claimed { border-color:rgba(16,185,129,.45); background:linear-gradient(135deg,rgba(16,185,129,.04) 0%,var(--bg-card) 100%); }
+    .topic-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:16px; flex-wrap:wrap; }
+    .topic-num-badge { display:inline-flex; align-items:center; justify-content:center; background:var(--gradient); color:#fff; border-radius:7px; width:27px; height:27px; font-size:12px; font-weight:800; flex-shrink:0; margin-top:1px; }
+    .topic-title { font-size:15px; font-weight:700; color:var(--text); display:flex; align-items:flex-start; gap:9px; flex:1; }
+    .topic-title-text { flex:1; line-height:1.4; }
+    .claimed-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.35); border-radius:100px; padding:5px 12px; font-size:12px; font-weight:600; color:#6ee7b7; white-space:nowrap; }
+    .takeaways-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-3); margin-bottom:9px; }
+    .takeaways-list { list-style:none; }
+    .takeaways-list li { display:flex; align-items:flex-start; gap:9px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); font-size:13.5px; color:var(--text-2); line-height:1.5; }
+    .takeaways-list li:last-child { border-bottom:none; padding-bottom:0; }
+    .t-dot { width:5px; height:5px; border-radius:50%; background:var(--primary-light); flex-shrink:0; margin-top:8px; }
+
+    /* ── Report ── */
+    .report-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+    .stat-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:28px; }
+    .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+    .stat-num  { font-size:28px; font-weight:800; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .stat-lbl  { font-size:12px; color:var(--text-3); margin-top:3px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+    .filter-row { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
+    .filter-row select { background:var(--bg-card); border:1px solid var(--border-light); border-radius:7px; padding:7px 11px; color:var(--text); font-size:13px; outline:none; cursor:pointer; }
+    .filter-row select:focus { border-color:var(--primary); }
+    .report-table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:var(--bg-card2); padding:11px 14px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-3); white-space:nowrap; border-bottom:1px solid var(--border); }
+    td { padding:12px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,.02); }
+    .td-title { color:var(--text); font-weight:500; max-width:320px; }
+    .td-badge { display:inline-block; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.25); border-radius:100px; padding:2px 9px; font-size:11px; font-weight:600; color:var(--primary-light); white-space:nowrap; }
+    .td-badge.green { background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.25); color:#6ee7b7; }
+    .td-badge.amber { background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.25); color:var(--warn); }
+    .empty-state { text-align:center; padding:60px 20px; color:var(--text-3); }
+    .empty-state .big { font-size:40px; margin-bottom:12px; }
+    .empty-state p { font-size:15px; }
+
+    /* ── Overlay / Loader ── */
+    .overlay { position:fixed; inset:0; background:rgba(8,15,30,.9); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:200; }
+    .loader-box { text-align:center; max-width:340px; padding:20px; }
+    .spinner { width:50px; height:50px; border-radius:50%; border:3px solid var(--border-light); border-top-color:var(--primary); animation:spin .75s linear infinite; margin:0 auto 18px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loader-title { font-size:17px; font-weight:700; margin-bottom:5px; }
+    .loader-sub   { font-size:14px; color:var(--text-2); margin-bottom:18px; }
+    .progress-track { height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+    .progress-fill  { height:100%; background:var(--gradient); border-radius:2px; animation:prog 1.4s ease-in-out forwards; }
+    @keyframes prog { 0%{width:5%} 70%{width:80%} 100%{width:95%} }
+
+    /* ── Toast ── */
+    .toast { position:fixed; bottom:22px; right:22px; z-index:300; background:var(--bg-card); border:1px solid var(--success); border-radius:10px; padding:12px 17px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--success); animation:slideUp .25s ease; box-shadow:0 8px 22px rgba(0,0,0,.4); }
+    @keyframes slideUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    /* ── Confirm dialog ── */
+    .confirm-overlay { position:fixed; inset:0; background:rgba(8,15,30,.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:300; }
+    .confirm-box { background:var(--bg-card); border:1px solid var(--border-light); border-radius:14px; padding:28px; max-width:360px; width:90%; text-align:center; }
+    .confirm-box h3 { font-size:17px; font-weight:700; margin-bottom:10px; }
+    .confirm-box p  { font-size:14px; color:var(--text-2); margin-bottom:22px; line-height:1.5; }
+    .confirm-box .btn-row { display:flex; gap:10px; justify-content:center; }
+
+    /* ── Summit session blocks ── */
+    .session-block { margin-bottom:36px; }
+    .session-header {
+      background: linear-gradient(135deg,rgba(99,102,241,.12) 0%,rgba(6,182,212,.06) 100%);
+      border:1px solid rgba(99,102,241,.3); border-radius:14px;
+      padding:20px 24px; margin-bottom:14px; position:relative; overflow:hidden;
+    }
+    .session-header::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+      background:var(--gradient);
+    }
+    .session-focus-pill {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(99,102,241,.2); border:1px solid rgba(99,102,241,.35);
+      border-radius:100px; padding:3px 11px; font-size:11px; font-weight:700;
+      color:var(--primary-light); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px;
+    }
+    .session-title { font-size:18px; font-weight:800; color:var(--text); line-height:1.3; }
+    .session-meta  { font-size:12px; color:var(--text-3); margin-top:5px; font-weight:500; }
+    .session-claimed-count {
+      display:inline-block; background:rgba(16,185,129,.15);
+      border:1px solid rgba(16,185,129,.3); border-radius:100px;
+      padding:2px 9px; font-size:11px; font-weight:700; color:#6ee7b7; margin-left:8px;
+    }
+    .subtopic-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:11px; padding:20px; margin-bottom:10px;
+      transition:border-color .18s, box-shadow .18s;
+    }
+    .subtopic-card:hover { border-color:var(--border-light); box-shadow:0 4px 18px rgba(0,0,0,.25); }
+    .subtopic-card.claimed { border-color:rgba(16,185,129,.4); background:rgba(16,185,129,.03); }
+    .subtopic-num {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; border-radius:6px; font-size:11px; font-weight:800;
+      background:rgba(99,102,241,.18); color:var(--primary-light); flex-shrink:0; margin-top:1px;
+    }
+    .subtopic-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+    .subtopic-title-wrap { display:flex; align-items:flex-start; gap:9px; flex:1; }
+    .subtopic-title { font-size:14px; font-weight:700; color:var(--text); line-height:1.4; }
+
+    @media(max-width:640px) {
+      .grid-sm { grid-template-columns:repeat(2,1fr); }
+      .grid-3  { grid-template-columns:repeat(2,1fr); }
+      .actions-row { flex-direction:column; }
+      .header { padding:12px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  STORAGE  (persistent claims across sessions)
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'eventiq_claims_v1';
+
+function loadClaims()  { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
+function saveClaims(c) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(c)); } catch {} }
+
+// ═══════════════════════════════════════════════════════
+//  REFERENCE DATA
+// ═══════════════════════════════════════════════════════
+const PRODUCTS = ['DMS','IU','RIDA','TD Events','TD Panels','BOA Events','BOA Panels','Vet Events','VET Panels','Law Events','Law Panels'];
+
+const VERTICALS = {
+  'Medical': [
+    {v:'Dental',ic:'🦷'},{v:'Aesthetic',ic:'✨'},{v:'Dermatology',ic:'🔬'},
+    {v:'Plastic Surgery',ic:'⚕️'},{v:'Veterinary',ic:'🐾'},{v:'Medspa',ic:'💆'},{v:'Ophthalmology',ic:'👁️'},
+  ],
+  'Legal': [
+    {v:'Family Law',ic:'👨‍👩‍👧'},{v:'Financial Law',ic:'💼'},{v:'Personal Injury',ic:'⚖️'},
+    {v:'Estate Planning',ic:'📜'},{v:'Corporate Law',ic:'🏢'},
+  ],
+};
+
+const EVENT_TYPES = [
+  {v:'Insurance',ic:'🛡️'},{v:'Leadership',ic:'🌟'},{v:'Business',ic:'📊'},{v:'Clinical',ic:'🏥'},
+  {v:'Marketing',ic:'📣'},{v:'Culture',ic:'🎯'},{v:'Technology/AI',ic:'🤖'},
+  {v:'Patient Experience',ic:'❤️'},{v:'Wealth/Exit',ic:'💰'},{v:'HR/Compliance',ic:'📋'},
+];
+
+const FORMATS = [
+  {v:'Panel',  ic:'👥',sub:'Expert panel discussion'},
+  {v:'Webinar',ic:'💻',sub:'Online presentation'},
+  {v:'Summit', ic:'🏔️',sub:'Large‑scale conference'},
+];
+
+const LEGAL_SET = new Set(['Family Law','Financial Law','Personal Injury','Estate Planning','Corporate Law']);
+const isLegalV  = v => LEGAL_SET.has(v);
+
+// Session-level titles used as block headers in Summit multi-focus mode
+const SESSION_TITLES = {
+  'Insurance':           'Risk Management & Practice Protection Strategies for {V}',
+  'Leadership':          'Leadership Mastery & Executive Development for {V} Practice Owners',
+  'Business':            'Business Growth, Financial Performance & Scale in {V}',
+  'Clinical':            'Clinical Excellence, Quality Standards & Risk Reduction in {V}',
+  'Marketing':           'Marketing, Brand Growth & Client Acquisition for {V} Practices',
+  'Culture':             'Culture, Talent Retention & Team Excellence in {V}',
+  'Technology/AI':       'Technology, AI Transformation & Innovation in {V} Practice',
+  'Patient Experience':  'Client & Patient Experience Excellence in {V}',
+  'Wealth/Exit':         'Wealth Building, Practice Valuation & Exit Planning for {V} Owners',
+  'HR/Compliance':       'HR, People Operations & Compliance in {V} Practice',
+  'General':             'Practice Growth, Business Development & Leadership for {V} Firms',
+};
+
+// ═══════════════════════════════════════════════════════
+//  TOPIC DATABASE
+// ═══════════════════════════════════════════════════════
+const DB = {
+
+  Insurance: {
+    topics: [
+      "Protecting Your {V} Practice: Building an Airtight 2026 Insurance Strategy",
+      "Malpractice Myths Every {V} Owner Must Stop Believing — And What's Actually True",
+      "How to Cut Insurance Premiums Without Sacrificing the Coverage Your {V} Practice Needs",
+      "The Hidden Insurance Gaps That Are Costing {V} Practices Thousands Annually",
+      "Cyber Liability & Data Breaches: The Threat Your {V} Practice Can't Afford to Ignore",
+      "Overhead Expense & Disability Insurance: The Policy Most {V} Owners Overlook",
+      "Workers' Compensation Mastery: Protect Your Team While Controlling Costs",
+      "Business Interruption Insurance: Surviving the Unexpected in Your {V} Practice",
+      "Tail Coverage, Occurrence vs. Claims‑Made: Choosing the Right Policy Structure",
+      "Umbrella Policies and Asset Protection Strategies for Growing {V} Practices",
+      "What Your Insurance Agent Isn't Telling You About {V} Practice Coverage",
+      "Insurance as a Risk Management Tool: Proactive Coverage for High‑Growth {V} Practices",
+    ],
+    takeaways: [
+      "How to perform a comprehensive annual insurance gap analysis tailored to {V} practices",
+      "Coverage thresholds most frequently recommended for {V} practitioners in 2026",
+      "How patient/client volume and case mix directly affect your risk profile and premiums",
+      "5 proven negotiation tactics that reduce annual insurance premiums without reducing protection",
+      "Cyber liability essentials: what your practice management vendor won't tell you",
+      "How to build an incident documentation system that protects you from the very first moment",
+      "Workers' comp safety program frameworks that reduce rates by 10–30% in professional environments",
+      "How to calculate the right business interruption coverage amount for your specific practice",
+      "When tail coverage is worth the cost — and when it genuinely isn't",
+      "How to benchmark your insurance costs against comparable {V} practices nationally",
+      "Key exclusions buried in standard policies that directly affect {V} practice owners",
+      "Step‑by‑step: what to do (and not do) when an incident occurs to protect your claim",
+      "Employment practices liability: the coverage most owners add only after it's too late",
+      "How adding a partner or associate changes your coverage requirements significantly",
+      "Building a risk‑aware culture that reduces incidents and keeps premiums low year over year",
+    ],
+  },
+
+  Leadership: {
+    topics: [
+      "From Practitioner to CEO: Building the Executive Mindset Your {V} Practice Demands",
+      "Leading High‑Performance Teams in a {V} Practice Environment",
+      "Decision‑Making Under Pressure: Frameworks for {V} Practice Owners",
+      "The Visionary vs. The Operator: Finding Your Leadership Identity as a {V} Owner",
+      "Building a Leadership Pipeline Inside Your {V} Practice",
+      "How Top‑Performing {V} Practice Owners Create Cultures of Accountability",
+      "Leading Through Change: Managing Growth, Staffing Crises, and Market Shifts in {V}",
+      "The Art of Delegation: How to Scale Your {V} Practice Without Losing Control",
+      "Conflict Resolution Strategies Every {V} Practice Owner Needs",
+      "Leadership Burnout in {V} Practice Ownership: Recognition, Recovery, and Prevention",
+      "Strategic Partnerships That Amplify Your {V} Practice's Growth",
+      "The Communication Skills That Separate Good {V} Practices from Great Ones",
+    ],
+    takeaways: [
+      "The 4 leadership modes every {V} practice owner must master as their practice grows",
+      "How to transition from technical expert to business leader without losing team respect",
+      "Building a weekly leadership rhythm: the meetings, metrics, and rituals that drive results",
+      "The delegation matrix: deciding what only you can do vs. what you must hand off now",
+      "How to identify and develop your next layer of leadership from within your existing team",
+      "Creating psychological safety in an environment where mistakes carry real consequences",
+      "The accountability system that eliminates chronic underperformance without constant confrontation",
+      "How to lead your team through rapid growth, mergers, or new location expansions",
+      "Conflict resolution protocols that resolve team disputes before they escalate to attrition",
+      "Warning signs of leadership burnout in practice owners — and a 30‑day recovery plan",
+      "How to communicate your practice vision in a way that genuinely motivates every team member",
+      "The quarterly leadership review process that keeps your {V} practice strategy on track",
+      "Strategic partnership models: DSOs, referral networks, co‑ownership — and how to evaluate them",
+      "How to give high‑stakes feedback where credentials and egos are involved",
+      "The daily habits shared by the top 10% of {V} practice owners across the country",
+    ],
+  },
+
+  Business: {
+    topics: [
+      "Building a Scalable Business Model for Your {V} Practice in 2026",
+      "The KPIs Every {V} Practice Owner Must Track Monthly to Stay on Course",
+      "Practice Valuation 101: What Your {V} Business Is Really Worth Right Now",
+      "Overhead Reduction Without Quality Sacrifice: A {V} Owner's Framework",
+      "Multi‑Location Expansion: When, How, and Whether to Scale Your {V} Practice",
+      "Private Equity and Group Partnerships: The {V} Owner's Evaluation Guide",
+      "Building Systems That Let Your {V} Practice Run Profitably Without You",
+      "Cash Flow Mastery for {V} Practice Owners",
+      "The Associate or Producer Model: Hiring, Training, and Retaining Revenue Generators",
+      "Practice Benchmarking: How Your {V} Business Compares to Top Performers Nationally",
+      "Revenue Diversification Strategies for Long‑Term {V} Practice Stability",
+      "From Solo to Group Practice: The Strategic Roadmap for Ambitious {V} Owners",
+    ],
+    takeaways: [
+      "The 7 financial KPIs that separate thriving {V} practices from those that struggle",
+      "How to calculate your practice's current valuation and the specific levers that drive it higher",
+      "Overhead benchmarks for {V} practices and a framework for closing the gap to best‑in‑class",
+      "Associate or producer compensation models that attract top talent without crushing margins",
+      "How to build SOPs that allow your practice to run consistently even when you're not present",
+      "Cash flow timing strategies that smooth the feast‑or‑famine revenue cycle",
+      "How to evaluate a DSO or group practice partnership offer without leaving money on the table",
+      "The financial model for multi‑location expansion: break‑even timelines and risk thresholds",
+      "Revenue diversification: service line expansions that make strategic sense for {V} practices",
+      "How to use your practice financials to negotiate better loan terms and vendor contracts",
+      "The monthly business review process that keeps your {V} practice on strategic track",
+      "Practice benchmarking: where to find reliable data and how to use it to set real targets",
+      "Building a board of advisors or peer group that meaningfully accelerates practice growth",
+      "How to price your services competitively without racing to the bottom on fees",
+      "The 3‑year financial roadmap every {V} practice owner should have documented in writing",
+    ],
+  },
+
+  Clinical: {
+    medical: {
+      topics: [
+        "Clinical Excellence as a Business Strategy: How Quality Outcomes Drive Revenue in {V}",
+        "Staying Current: Implementing Evidence‑Based Protocols in a Busy {V} Practice",
+        "Clinical Risk Management: Preventing the Mistakes That End {V} Careers",
+        "The Technology Stack Transforming Clinical Delivery in {V} Practices",
+        "Building Clinical Consistency Across Multiple Providers in Your {V} Practice",
+        "Informed Consent Best Practices That Protect Your {V} Practice and Your Patients",
+        "Managing Complex Cases: When to Refer and When to Treat in Your {V} Practice",
+        "Documentation Standards That Protect Your License and Your Practice",
+        "Clinical Team Training: Building a Practice‑Wide Culture of Excellence",
+        "Outcomes Measurement: How Top {V} Practices Track and Improve Clinical Results",
+        "Diagnostic Technology Investments: ROI and Patient Outcomes in {V} Practices",
+        "Clinical Workflows That Maximize Productivity Without Compromising Care Quality",
+      ],
+      takeaways: [
+        "How to build a clinical outcomes tracking system without adding significant administrative burden",
+        "The documentation standards that satisfy regulators, insurers, and plaintiffs' attorneys",
+        "How to implement a new clinical protocol across a multi‑provider practice successfully",
+        "Informed consent best practices: what to document, in what format, and at which touchpoints",
+        "The referral decision framework that protects both your patients and your liability exposure",
+        "How to evaluate and adopt new clinical technology with a clear ROI model and timeline",
+        "Building peer review and quality improvement processes into your regular practice rhythm",
+        "The clinical training curriculum that gets new hires to full productivity 30% faster",
+        "How clinical excellence scores directly impact patient retention and word‑of‑mouth referrals",
+        "Managing the difficult patient conversation: protocols that reduce conflict and formal complaints",
+        "Complications management: the response protocol that protects your practice and your patient",
+        "How top {V} practices use outcomes data ethically in their marketing and patient communications",
+        "Credentialing updates and continuing education tracking for a growing multi‑provider practice",
+        "Clinical workflow design: eliminating the daily bottlenecks that cost your practice real revenue",
+        "How to build a culture where clinical staff feel safe reporting errors and near‑misses",
+      ],
+    },
+    legal: {
+      topics: [
+        "Case Management Excellence: The Systems That Separate Top {V} Firms From the Rest",
+        "Client Intake Best Practices That Improve Outcomes and Reduce Risk in {V} Practices",
+        "Building Consistent Case Standards Across Multiple Attorneys in Your {V} Firm",
+        "Documentation and File Management: The Protocols That Protect {V} Attorneys",
+        "Managing Complex Cases: Knowing When to Refer Out and When to Handle In‑House",
+        "The {V} Firm's Guide to Informed Client Communication and Expectation Management",
+        "Peer Review and Quality Control in a Multi‑Attorney {V} Firm",
+        "How Top {V} Firms Measure and Improve Client Outcomes Systematically",
+        "Risk Management in {V} Practice: Identifying and Eliminating Malpractice Exposure",
+        "Practice Workflows That Maximize Attorney Productivity Without Sacrificing Quality",
+        "Building a {V} Practice Where Every Case Gets Handled to the Same High Standard",
+        "The Technology Stack That Elevates Case Management Quality in {V} Firms",
+      ],
+      takeaways: [
+        "How to build a case quality tracking system that identifies problems before they become claims",
+        "The file documentation standards that satisfy bar requirements and protect against malpractice",
+        "How to implement consistent intake protocols across a growing multi‑attorney {V} firm",
+        "Client communication standards: what to document, how often to update, and at which milestones",
+        "The referral and co‑counsel decision framework that protects your clients and your reputation",
+        "How to evaluate case management software with a clear ROI model for your {V} firm",
+        "Building peer review processes that improve quality without creating a punitive culture",
+        "The associate training curriculum that gets new attorneys to full caseload faster",
+        "How your case outcomes track record directly drives referrals and online reputation",
+        "Managing difficult client conversations: protocols that reduce complaints and bar grievances",
+        "Mistakes management: the response protocol that protects your firm and your client relationship",
+        "How top {V} firms use outcomes data and client testimonials ethically in their marketing",
+        "Docketing, calendar control, and deadline management for a high‑volume {V} practice",
+        "Workflow design: eliminating the administrative bottlenecks costing your attorneys billable time",
+        "Building a culture where associates feel safe flagging problems before they become crises",
+      ],
+    },
+  },
+
+  Marketing: {
+    topics: [
+      "The {V} Practice Marketing Playbook for 2026: What's Working, What's Dead",
+      "Google Ads vs. Meta Ads for {V} Practices: Where Your Budget Actually Converts",
+      "Reputation Management: Turning Online Reviews Into Your {V} Practice's Growth Engine",
+      "Content Marketing That Attracts Ideal Clients to Your {V} Practice Consistently",
+      "Building a Referral Network That Consistently Fills Your {V} Appointment Book",
+      "Video Marketing for {V} Practices: From Concept to Measurable Conversions",
+      "The Client Journey Map: Plugging the Revenue Leaks in Your {V} Practice's Funnel",
+      "Local SEO for {V} Practices: Dominating Search in Your Market in 2026",
+      "Social Media Strategies That Actually Drive Appointments for {V} Practices",
+      "Email Marketing & Client Reactivation: The Revenue Hiding in Your {V} Database",
+      "Brand Building for {V} Practice Owners: Standing Out in a Crowded Market",
+      "Marketing Analytics: The Numbers Every {V} Practice Owner Must Understand",
+    ],
+    takeaways: [
+      "How to calculate your true cost‑per‑new‑client across every marketing channel you run",
+      "The Google Business Profile optimization checklist that moves {V} practices to top local rankings",
+      "Review generation systems that ethically double your 5‑star reviews within 90 days",
+      "The content marketing framework that builds trust with potential clients before they contact you",
+      "How to build a professional referral program with trackable, measurable ROI",
+      "Client reactivation email sequences that re‑engage your dormant database systematically",
+      "Video content types that generate the most appointment requests for {V} practices in 2026",
+      "How to allocate your marketing budget across paid, organic, and referral channels strategically",
+      "The website conversion audit: 8 fixes that increase inquiries without spending more on ads",
+      "Social media content planning: a 30‑day content calendar template built for {V} practices",
+      "How to respond to negative reviews in a way that builds trust with prospective new clients",
+      "Marketing to different demographics: tailoring your message by age, coverage type, and need",
+      "The client success story framework that generates authentic testimonials and referrals at scale",
+      "How to set up marketing attribution tracking so you finally know what's actually working",
+      "Community partnerships and local events that build genuine brand awareness for {V} practices",
+    ],
+  },
+
+  Culture: {
+    topics: [
+      "Building a Culture of Excellence That Retains Your Best {V} Practice Team Members",
+      "From Toxic to Thriving: Rebuilding a Damaged Culture in Your {V} Practice",
+      "The Onboarding System That Turns New Hires Into Loyal, Committed Team Members",
+      "How {V} Practice Owners Create Workplaces Where High‑Performers Choose to Stay",
+      "Recognition, Rewards, and the Non‑Monetary Benefits That Matter Most to Your Team",
+      "Managing Generational Differences in Your {V} Practice Team",
+      "Psychological Safety in a High‑Stakes Environment: Building a Culture of Honest Communication",
+      "The Culture Audit: Diagnosing What's Really Happening in Your {V} Practice",
+      "Creating a Performance Culture That Raises the Bar Without Burning People Out",
+      "How Top {V} Practices Build a Culture That Becomes Their Primary Competitive Advantage",
+      "Staff Engagement: Getting Honest Feedback and Actually Acting on It",
+      "The Core Values Framework That Guides Every Hiring and Firing Decision in Your Practice",
+    ],
+    takeaways: [
+      "The 5 culture indicators that predict staff turnover months before it actually happens",
+      "How to design an onboarding experience that reduces first‑year attrition by up to 40%",
+      "The recognition program framework that costs little but genuinely means everything to your team",
+      "How to manage Baby Boomer, Gen X, Millennial, and Gen Z staff effectively under one roof",
+      "Conducting an honest culture audit: the questions to ask and what to do with the answers",
+      "Building psychological safety in a high‑stakes professional environment",
+      "The accountability system that maintains high standards without creating a culture of fear",
+      "How to rebuild trust after a toxic culture event, layoffs, or leadership failure",
+      "Core values that aren't just wall art: embedding them into daily decisions and every hire",
+      "The team meeting structure that builds both team connection and strategic alignment",
+      "How to handle the chronic low performer without demoralizing your high performers",
+      "Exit interview insights: what departing employees are really telling you about your culture",
+      "Flexible scheduling and work‑life balance strategies that don't sacrifice client or patient care",
+      "How to measure genuine culture improvement over time with meaningful, quantifiable metrics",
+      "The hiring process changes that effectively filter for culture fit before the first day",
+    ],
+  },
+
+  'Technology/AI': {
+    topics: [
+      "AI in {V} Practice Management: What's Real, What's Hype, and What to Invest in Now",
+      "Automating Your {V} Practice: From Scheduling to Billing Without Adding Headcount",
+      "The Practice Management Software Upgrade That Pays for Itself in 90 Days",
+      "AI‑Powered Client Communication: Reducing No‑Shows and Improving the Experience",
+      "Data Security and Compliance in the Age of AI: What Every {V} Practice Owner Must Know",
+      "Remote Service and Digital Delivery Expansion Strategies for {V} Practices in 2026",
+      "Using AI to Improve Workflows and Documentation in Your {V} Practice",
+      "The Tech Stack Every High‑Performing {V} Practice Has in Place Right Now",
+      "Automating Revenue Cycle: How {V} Practices Are Recovering Lost Revenue With Technology",
+      "Digital Client Experience: The Technology Investments That Drive 5‑Star Reviews",
+      "How AI Is Reshaping the {V} Landscape — And What Owners Must Do in the Next 12 Months",
+      "Building a Technology Roadmap for Your {V} Practice: A Practical 3‑Year Planning Guide",
+    ],
+    takeaways: [
+      "How to evaluate AI tools using a practical ROI framework before committing any budget",
+      "The top automation opportunities in {V} practices that eliminate the most wasted staff hours",
+      "Compliance and AI: the checklist before deploying any AI tool in your practice environment",
+      "How to choose and migrate practice management software without disrupting daily operations",
+      "AI‑powered scheduling and reminders: real‑world no‑show reduction results from {V} practices",
+      "How AI documentation tools are transforming the daily experience of practitioners in {V}",
+      "Revenue cycle automation: the specific workflows that recover the most lost revenue",
+      "Cybersecurity basics every {V} practice owner must have implemented before end of 2026",
+      "How to train your team on new technology without disrupting service delivery during transition",
+      "Client or patient portal tools that measurably improve satisfaction and reduce inbound call volume",
+      "Building your technology budget: what to invest in now, what to defer, and what to skip entirely",
+      "Vendor evaluation: the 12 questions to ask before signing any software or platform contract",
+      "How leading {V} practices use data analytics to make better, faster business decisions",
+      "A realistic 5‑year forecast for AI in {V} practice: what's coming and how to prepare now",
+      "Digital intake and onboarding workflows that cut administrative time by 30% or more",
+    ],
+  },
+
+  'Patient Experience': {
+    topics: [
+      "From First Click to Follow‑Up: Designing a 5‑Star {V} Client Experience End‑to‑End",
+      "The Experience Audit: Finding and Eliminating Hidden Friction in Your {V} Practice",
+      "How {V} Practices Use Client Feedback to Drive Measurable, Lasting Improvement",
+      "Reducing Client Anxiety Before the Visit: Communication Strategies That Build Trust Early",
+      "The Front Desk Experience: Why Your First Impression Is Your Most Powerful Marketing Tool",
+      "Client Retention Strategies That Turn One‑Time Visits Into Lifelong Relationships",
+      "Complaint Resolution That Turns Unhappy Clients Into Your Most Loyal Advocates",
+      "How to Build an Experience Program That Drives Both Retention and High‑Quality Referrals",
+      "The Personalization Playbook: Making Every Client in Your {V} Practice Feel Seen and Valued",
+      "Wait Times, Flow, and Comfort: Operational Improvements That Transform Satisfaction Scores",
+      "Client Communication Protocols That Reduce Anxiety, No‑Shows, and Formal Complaints",
+      "Measuring Client Satisfaction in Your {V} Practice: Beyond the Star Rating",
+    ],
+    takeaways: [
+      "How to map your complete client journey and identify the 3 moments that matter most",
+      "The pre‑visit communication sequence that measurably reduces client anxiety and no‑shows",
+      "Front desk or intake training: specific scripts and behaviors that set the tone for every visit",
+      "How to build a client feedback system that generates insights you can actually act on",
+      "The complaint resolution protocol that turns your worst experiences into your strongest testimonials",
+      "Recall and retention sequences that meaningfully increase lifetime client value",
+      "How personalization — even at small scale — dramatically improves loyalty and referrals",
+      "Operational flow analysis: how to reduce both actual and perceived wait times in your practice",
+      "The follow‑up protocol that makes every client feel genuinely cared for after their appointment",
+      "How to train your entire team on client experience — not just front desk or intake staff",
+      "Net Promoter Score and other satisfaction metrics worth tracking and reviewing monthly",
+      "Client communication technology: tools that automate a great experience without feeling robotic",
+      "How to turn long‑term clients into active, enthusiastic referral sources for your practice",
+      "Managing the difficult client relationship without compromising your team's morale and wellbeing",
+      "The experience investments with the highest measurable ROI for {V} practices specifically",
+    ],
+  },
+
+  'Wealth/Exit': {
+    topics: [
+      "What Is Your {V} Practice Actually Worth? A 2026 Valuation Reality Check for Owners",
+      "The Exit Planning Roadmap Every {V} Practice Owner Should Start Building Right Now",
+      "Selling to a Group vs. Going Independent: The {V} Owner's Complete Decision Guide",
+      "Building Personal Wealth Alongside Your {V} Practice: A Parallel Wealth Strategy",
+      "Tax‑Advantaged Retirement Strategies for Self‑Employed {V} Practice Owners",
+      "How to Maximize Your {V} Practice's Valuation Before You Sell",
+      "Succession Planning: Transitioning Your {V} Practice to an Associate or Family Member",
+      "The Financial Independence Blueprint for Ambitious {V} Practice Owners",
+      "Passive Income Streams That {V} Practice Owners Are Building Right Now",
+      "Negotiating Your {V} Practice Sale: What Buyers Look For and How to Prepare",
+      "The First 5 Wealth‑Building Moves Every New {V} Practice Owner Should Make Immediately",
+      "Managing Debt, Equity, and Cash Flow on the Path to Practice Ownership Wealth",
+    ],
+    takeaways: [
+      "The EBITDA multiples buyers are currently paying for {V} practices in your market",
+      "The 7 value drivers that most significantly affect your {V} practice's sale price",
+      "How to structure your practice financials to show maximum value to a prospective buyer",
+      "Tax strategies that keep significantly more of your sale proceeds when you exit",
+      "The financial differences between a group buyout, partner buyout, and associate succession",
+      "Retirement account strategies — Solo 401k, SEP IRA, Defined Benefit — for high‑income owners",
+      "How to begin exit planning 5–10 years out so you have real options, not just one offer",
+      "Real estate strategies: own your practice building and lease it back after you sell",
+      "Passive income opportunities that meaningfully complement active practice income",
+      "How to evaluate a PE‑backed or group offer: earn‑outs, equity stakes, and what to negotiate",
+      "The financial independence number for a {V} practice owner and how to calculate yours precisely",
+      "Wealth management basics: how to invest the proceeds from your practice equity intelligently",
+      "Building a personal balance sheet alongside your practice balance sheet from day one",
+      "When to bring in an M&A advisor vs. handle your practice sale independently",
+      "The legal and financial team you need assembled before you ever list your {V} practice for sale",
+    ],
+  },
+
+  'HR/Compliance': {
+    topics: [
+      "The HR Compliance Audit Every {V} Practice Must Complete Before Year End",
+      "Hiring, Onboarding, and Termination: Avoiding the Legal Pitfalls in Your {V} Practice",
+      "Non‑Competes, Non‑Solicitation, and Employment Agreements in {V}: What's Changed in 2026",
+      "Regulatory Compliance: Staying Current Without Drowning in Paperwork",
+      "Managing Leave Requests, ADA Accommodations, and HR Gray Areas in Your {V} Practice",
+      "The Performance Management Process That Protects Your {V} Practice Legally",
+      "Building an Employee Handbook That Actually Protects Your {V} Practice",
+      "Wage and Hour Compliance for {V} Practices: What Audits Typically Uncover",
+      "How to Handle Workplace Investigations Professionally and Legally in Your Practice",
+      "Billing Compliance and Fraud Prevention in {V} Practices",
+      "The HR Technology Stack That Reduces Compliance Risk in Growing {V} Practices",
+      "Employee Classification: Independent Contractor vs. Employee in {V} — The Risk You're Taking",
+    ],
+    takeaways: [
+      "The 10‑point HR compliance checklist every {V} practice should complete on an annual basis",
+      "How to conduct defensible performance improvement plans that hold up if challenged legally",
+      "Termination best practices: the exact process and documentation that minimizes legal exposure",
+      "Non‑compete enforceability in 2026: what has changed and what it means for your practice",
+      "Regulatory compliance for professional environments: the inspections that catch owners off guard",
+      "Compliance training requirements: frequency, format, and documentation regulators expect",
+      "How to handle an employee accommodation request under ADA in a professional services setting",
+      "Wage and hour compliance: overtime rules and the misclassification risks common in {V} practices",
+      "Building an employee handbook that is both legally protective and genuinely culture‑positive",
+      "The investigation protocol for workplace harassment, discrimination, or misconduct complaints",
+      "Billing compliance audits: how to identify and self‑correct problematic patterns before regulators do",
+      "Independent contractor vs. employee: the tests that determine classification and your risk level",
+      "How to stay current on regulatory changes without hiring a full‑time compliance officer",
+      "Employment practices liability insurance: what it covers, when you need it, and how to buy it",
+      "Building a legally compliant hiring process from job posting to signed offer letter",
+    ],
+  },
+
+  // ── General pool used when legal vertical skips event focus ──
+  _General_Legal: {
+    topics: [
+      "Building a {V} Practice That Attracts and Retains the Right Clients in 2026",
+      "The Modern {V} Firm: Adapting Your Practice for Today's Client Expectations",
+      "Growing Your {V} Practice: A Complete Business Development Playbook",
+      "From Solo Attorney to Firm Owner: The Leadership Transition in {V}",
+      "Financial Management for {V} Practice Owners: Beyond Billing Hours",
+      "Building Referral Networks That Consistently Generate Ideal {V} Cases",
+      "The Technology Transformation of {V} Practice: Where to Invest Right Now",
+      "Client Experience Excellence in {V}: Turning Cases Into Long‑Term Relationships",
+      "Work‑Life Balance and Sustainability in {V} Practice Ownership",
+      "The Future of {V} Practice: Trends Every Firm Owner Must Prepare For Now",
+      "How Top {V} Firms Are Winning on Culture, Talent, and Client Experience",
+      "Revenue Diversification Strategies That Reduce Dependence on Case Flow in {V}",
+    ],
+    takeaways: [
+      "The business development strategies generating the highest ROI for {V} firm owners in 2026",
+      "How to define your ideal client profile and build systems that attract them consistently",
+      "The financial KPIs every {V} practice owner must track monthly to stay on course",
+      "How to transition from practitioner to CEO without letting service quality slip",
+      "Building referral partnerships that send qualified {V} cases to your door reliably",
+      "The technology investments that deliver the clearest ROI for {V} practices this year",
+      "How to create client experience systems that generate repeat work and word‑of‑mouth referrals",
+      "Revenue diversification strategies that reduce your firm's dependence on unpredictable case flow",
+      "The leadership routines that keep a growing {V} firm aligned, accountable, and high‑performing",
+      "Work‑life integration practices that prevent burnout without sacrificing your firm's growth",
+      "How top {V} firms attract and retain the best associate attorneys in a competitive market",
+      "The exit planning timeline: when to start and what to build into your firm from day one",
+      "Overhead management strategies that protect profitability as your {V} practice grows",
+      "Building a brand identity for your {V} firm that commands premium positioning in your market",
+      "How to use client feedback data to make decisions that systematically grow your practice",
+    ],
+  },
+
+};
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  screen:     'signin',
+  name:       '',
+  product:    '',
+  vertical:   '',
+  // Array of selected event focuses.
+  // Summit → multi-select (unlimited). Panel/Webinar → max 1.
+  // Empty array → "General / No Specific Focus" (legal opt-out only).
+  eventTypes: [],
+  format:     '',
+  topics:     null,   // null | {type:'flat', topics:[]} | {type:'sessions', sessions:[]}
+  claimed:    {},
+  loading:    false,
+  error:      null,
+  seed:       0,
+  reportFilter: { product: '', vertical: '' },
+};
+
+// ═══════════════════════════════════════════════════════
+//  TOPIC ENGINE
+// ═══════════════════════════════════════════════════════
+function shuffle(arr, seed) {
+  const a = [...arr];
+  let s = (seed >>> 0) || 1;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = Math.imul(s ^ (s >>> 15), s | 1) ^ Math.imul(s ^ (s >>> 7), s | 61);
+    s = (s ^ (s >>> 14)) >>> 0;
+    const j = s % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateTopics() {
+  const legal    = isLegalV(S.vertical);
+  const noFocus  = S.eventTypes.length === 0;
+  const isSummit = S.format === 'Summit';
+  const multiF   = isSummit && S.eventTypes.length > 1;
+  const rep      = str => str.replace(/\{V\}/g, S.vertical);
+  const seed     = S.seed;
+
+  const getPool = focus => {
+    if (!focus) return DB._General_Legal;
+    const entry = DB[focus];
+    if (!entry) return null;
+    return (entry.medical && entry.legal) ? (legal ? entry.legal : entry.medical) : entry;
+  };
+
+  const activeFocuses = noFocus ? [''] : S.eventTypes;
+
+  if (multiF) {
+    // ── Summit multi-focus: hierarchical sessions ──────────────────────────
+    // Each focus area = one session block with 4-5 claimable sub-topics
+    let globalIdx = 0;
+    return {
+      type: 'sessions',
+      sessions: activeFocuses.map((focus, fi) => {
+        const pool = getPool(focus);
+        if (!pool) return null;
+        const focusKey    = focus || 'General';
+        const sessionTmpl = SESSION_TITLES[focusKey] || `${focusKey} Strategies for {V} Practice Owners`;
+        const titles      = shuffle(pool.topics,    seed + fi * 19).slice(0, 5); // 5 sub-topics
+        const takeaways   = shuffle(pool.takeaways, seed + fi * 19 + 11);
+        return {
+          focusArea:    focusKey,
+          sessionTitle: rep(sessionTmpl),
+          subTopics:    titles.map((title, i) => ({
+            globalIdx:  globalIdx++,
+            title:      rep(title),
+            takeaways:  Array.from({length: 8}, (_, k) => rep(takeaways[(i * 5 + k) % takeaways.length])),
+          })),
+        };
+      }).filter(Boolean),
+    };
+  } else {
+    // ── Flat mode: Panel / Webinar / Summit single-focus ───────────────────
+    const focus     = activeFocuses[0];
+    const pool      = getPool(focus);
+    if (!pool) return { type: 'flat', topics: [] };
+    const titles    = shuffle(pool.topics,    seed).slice(0, 8);
+    const takeaways = shuffle(pool.takeaways, seed + 7);
+    return {
+      type:   'flat',
+      topics: titles.map((title, i) => ({
+        globalIdx:  i,
+        focusArea:  focus || 'General',
+        title:      rep(title),
+        takeaways:  Array.from({length: 8}, (_, k) => rep(takeaways[(i * 5 + k) % takeaways.length])),
+      })),
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+  const root = document.getElementById('root');
+  if (S.screen === 'signin') { root.innerHTML = renderSignin(); return; }
+  root.innerHTML = renderHeader() + '<div class="main" id="mc"></div>';
+  const mc = document.getElementById('mc');
+  if (S.screen === 'configure') mc.innerHTML = renderConfigure();
+  if (S.screen === 'topics')    mc.innerHTML = renderTopics();
+  if (S.screen === 'report')    mc.innerHTML = renderReport();
+  if (S.loading) {
+    const ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.innerHTML = `<div class="loader-box">
+      <div class="spinner"></div>
+      <div class="loader-title">Generating Topics…</div>
+      <div class="loader-sub">Crafting topics for <strong>${esc(S.vertical)}</strong> practice owners</div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+    </div>`;
+    root.appendChild(ov);
+  }
+}
+
+/* ── Header ── */
+function renderHeader() {
+  const claimsAll = loadClaims();
+  return `
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="logo-text">⚡ EventIQ</span>
+      <span class="logo-tag">Beta</span>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-ghost btn-sm" onclick="goReport()" style="position:relative;">
+        📊 Claims Report
+        ${claimsAll.length > 0 ? `<span style="position:absolute;top:-5px;right:-5px;background:var(--primary);color:#fff;border-radius:50%;width:17px;height:17px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;">${Math.min(claimsAll.length,99)}</span>` : ''}
+      </button>
+      <div class="user-pill">
+        <span>👤</span>
+        <span style="font-weight:600;">${esc(S.name)}</span>
+        <span class="dot"></span>
+        <span style="color:var(--primary-light);font-weight:500;">${esc(S.product)}</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
+    </div>
+  </header>`;
+}
+
+/* ── Sign-in ── */
+function renderSignin() {
+  return `<div class="main"><div class="signin-wrap">
+    <div class="signin-hero">
+      <h1>⚡ EventIQ</h1>
+      <p>Intelligent event topic generator built for practice owners</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Sign In to Continue</div>
+      ${S.error ? `<div class="err-box">⚠️ ${esc(S.error)}</div>` : ''}
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input id="inName" type="text" class="form-control" placeholder="e.g. Sarah Johnson" value="${esc(S.name)}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Product</label>
+        <select id="inProd" class="form-control">
+          <option value="">Select your product…</option>
+          ${PRODUCTS.map(p => `<option value="${p}" ${S.product===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="divider"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;" onclick="signIn()">Continue to Event Builder →</button>
+    </div>
+  </div></div>`;
+}
+
+/* ── Configure ── */
+function renderConfigure() {
+  const legal    = isLegalV(S.vertical);
+  const isSummit = S.format === 'Summit';
+  const canGen   = S.vertical && S.format && (S.eventTypes.length > 0 || legal);
+
+  // Generic sel-card; for eventType uses toggle logic via pick()
+  const selCard = (val, ic, sub, field, extraClass) => {
+    let isActive = false;
+    if (field === 'eventType') {
+      isActive = val === '' ? (legal && S.eventTypes.length === 0) : S.eventTypes.includes(val);
+    } else {
+      isActive = S[field] === val;
+    }
+    return `
+    <div class="sel-card ${isActive?'active':''} ${extraClass||''}" onclick="pick('${field}','${escQ(val)}')">
+      ${ic?`<div class="ic">${ic}</div>`:''}
+      <div>${esc(val||'No Specific Focus')}</div>
+      ${sub?`<div class="sub">${esc(sub)}</div>`:''}
+      ${(field==='eventType' && isSummit && isActive && val!=='') ? `<div style="font-size:10px;margin-top:3px;color:var(--success);">✓ selected</div>` : ''}
+    </div>`;
+  };
+
+  return `
+  <div class="steps">
+    <div class="step-item"><div class="step-num now">1</div><span class="step-lbl now">Configure</span></div>
+    <span class="step-arrow">›</span>
+    <div class="step-item"><div class="step-num later">2</div><span class="step-lbl">Generate</span></div>
+    <span class="step-arrow">›</span>
+    <div class="step-item"><div class="step-num later">3</div><span class="step-lbl">Claim &amp; Use</span></div>
+  </div>
+
+  <div class="page-title">Configure Your Event</div>
+  <div class="page-sub">Select a vertical, event focus, and format — then generate compelling topics for your audience.</div>
+  ${S.error?`<div class="err-box" style="margin-bottom:22px;">⚠️ ${esc(S.error)}</div>`:''}
+
+  <!-- Verticals -->
+  <div class="config-section">
+    ${Object.entries(VERTICALS).map(([grp, items], gi) => `
+      <div class="group-label" style="${gi>0?'margin-top:18px;':''}">
+        <span>${grp==='Medical'?'🏥':'⚖️'}</span> ${grp} Verticals
+      </div>
+      <div class="grid-sm">
+        ${items.map(x => selCard(x.v, x.ic, '', 'vertical', '')).join('')}
+      </div>`).join('')}
+  </div>
+
+  <!-- Event Type -->
+  <div class="config-section">
+    <div class="sec-label">
+      📌 Event Focus / Type
+      ${legal ? `<span class="opt-badge">Optional for Legal</span>` : ''}
+      ${isSummit ? `<span style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#6ee7b7;">Multi‑Select for Summit ✓</span>` : ''}
+    </div>
+
+    ${isSummit ? `
+      <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:9px;padding:10px 14px;margin-bottom:11px;font-size:13px;color:#6ee7b7;display:flex;align-items:center;gap:8px;">
+        🏔️ Summit mode — select <strong>multiple focuses</strong>. Each focus generates 3 dedicated topics so your agenda covers the full event.
+        ${S.eventTypes.length > 0 ? `<span style="margin-left:auto;font-weight:700;">${S.eventTypes.length} selected</span>` : ''}
+      </div>` : ''}
+
+    ${legal ? `
+      <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:9px;padding:10px 14px;margin-bottom:11px;font-size:13px;color:var(--warn);display:flex;align-items:center;gap:8px;">
+        ℹ️ For legal verticals, event focus is optional. Skip it for general practice‑growth topics, or select a focus for targeted content.
+      </div>
+      <div class="grid-sm" style="margin-bottom:4px;">
+        ${selCard('', '⬜', '', 'eventType', 'skip-card')}
+        ${EVENT_TYPES.map(x => selCard(x.v, x.ic, '', 'eventType', '')).join('')}
+      </div>` : `
+      <div class="grid-sm">
+        ${EVENT_TYPES.map(x => selCard(x.v, x.ic, '', 'eventType', '')).join('')}
+      </div>`}
+  </div>
+
+  <!-- Format -->
+  <div class="config-section">
+    <div class="sec-label">🎙️ Event Format</div>
+    <div class="grid-3">
+      ${FORMATS.map(x => selCard(x.v, x.ic, x.sub, 'format', '')).join('')}
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="generate-cta">
+    <button class="btn btn-primary btn-lg" onclick="generate()" ${canGen?'':'disabled'}>
+      ✨ Generate Topics
+    </button>
+    ${!canGen
+      ? `<p class="hint">Please select a vertical${!legal?' and event type':''} and format to continue.</p>`
+      : (() => {
+          const focusStr = S.eventTypes.length === 0
+            ? '<strong>General Practice Topics</strong>'
+            : S.eventTypes.map(f => `<strong>${esc(f)}</strong>`).join(' · ');
+          const countNote = isSummit && S.eventTypes.length > 1
+            ? ` — <strong>${S.eventTypes.length} sessions</strong>, 5 sub-topics each (${S.eventTypes.length * 5} total)`
+            : ' — <strong>8 topics</strong>';
+          return `<p class="hint" style="color:var(--text-2);">
+            ${esc(S.vertical)} · ${focusStr} · ${esc(S.format)}${countNote}
+          </p>`;
+        })()}
+  </div>`;
+}
+
+/* ── Topics ── */
+function renderTopics() {
+  const claimedCount = Object.keys(S.claimed).length;
+  const isSessions   = S.topics?.type === 'sessions';
+  const isSummit     = S.format === 'Summit';
+  const pfx          = S.format === 'Panel' ? 'Panel — ' : '';
+  const focusTags    = S.eventTypes.length > 0
+    ? S.eventTypes.map(f => `<span class="tag">📌 ${esc(f)}</span>`).join('')
+    : `<span class="tag amber">📌 General Topics</span>`;
+
+  // ── Summit multi-focus: hierarchical session view ──────────────────────
+  const renderSessions = () => {
+    const sessions = S.topics.sessions;
+    const totalTopics = sessions.reduce((n, s) => n + s.subTopics.length, 0);
+    return sessions.map((session, si) => {
+      const focusIcon = (EVENT_TYPES.find(x => x.v === session.focusArea) || {}).ic || '📌';
+      const sessionClaimed = session.subTopics.filter(st => S.claimed[st.globalIdx]).length;
+      return `
+      <div class="session-block">
+        <div class="session-header">
+          <div class="session-focus-pill">${focusIcon} ${esc(session.focusArea)}</div>
+          <div class="session-title">${esc(session.sessionTitle)}</div>
+          <div class="session-meta">
+            Session ${si+1} of ${sessions.length} &nbsp;·&nbsp; ${session.subTopics.length} Topics
+            ${sessionClaimed > 0 ? `<span class="session-claimed-count">✅ ${sessionClaimed} claimed</span>` : ''}
+          </div>
+        </div>
+        ${session.subTopics.map((st, ti) => {
+          const cl = S.claimed[st.globalIdx];
+          return `
+          <div class="subtopic-card ${cl ? 'claimed' : ''}">
+            <div class="subtopic-head">
+              <div class="subtopic-title-wrap">
+                <span class="subtopic-num">${ti+1}</span>
+                <span class="subtopic-title">${esc(st.title)}</span>
+              </div>
+              <div style="flex-shrink:0;padding-top:1px;">
+                ${cl
+                  ? `<div class="claimed-pill">✅ ${esc(cl.name)} · ${esc(cl.product)}</div>`
+                  : `<button class="btn btn-primary btn-sm" onclick="claim(${st.globalIdx})">Claim Sub-Topic</button>`}
+              </div>
+            </div>
+            <div class="takeaways-label">Key Takeaways &amp; Discussion Points</div>
+            <ul class="takeaways-list">
+              ${st.takeaways.map(tk=>`<li><div class="t-dot"></div><span>${esc(tk)}</span></li>`).join('')}
+            </ul>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  };
+
+  // ── Flat mode: Panel / Webinar / Summit single-focus ──────────────────
+  const renderFlat = () => {
+    const topics = S.topics.topics || [];
+    return topics.map((t) => {
+      const cl = S.claimed[t.globalIdx];
+      return `
+      <div class="topic-card ${cl?'claimed':''}">
+        <div class="topic-card-head">
+          <div class="topic-title">
+            <span class="topic-num-badge">${t.globalIdx+1}</span>
+            <span class="topic-title-text">
+              ${pfx?`<span style="color:var(--primary-light);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">${esc(pfx)}</span>`:''}
+              ${esc(t.title)}
+            </span>
+          </div>
+          <div style="flex-shrink:0;padding-top:2px;">
+            ${cl
+              ? `<div class="claimed-pill">✅ ${esc(cl.name)} · ${esc(cl.product)}</div>`
+              : `<button class="btn btn-primary btn-sm" onclick="claim(${t.globalIdx})">Claim Topic</button>`}
+          </div>
+        </div>
+        <div class="takeaways-label">Key Takeaways &amp; Discussion Points</div>
+        <ul class="takeaways-list">
+          ${t.takeaways.map(tk=>`<li><div class="t-dot"></div><span>${esc(tk)}</span></li>`).join('')}
+        </ul>
+      </div>`;
+    }).join('');
+  };
+
+  const totalTopics = isSessions
+    ? S.topics.sessions.reduce((n, s) => n + s.subTopics.length, 0)
+    : (S.topics.topics || []).length;
+
+  return `
+  <div class="steps">
+    <div class="step-item"><div class="step-num done">✓</div><span class="step-lbl">Configure</span></div>
+    <span class="step-arrow">›</span>
+    <div class="step-item"><div class="step-num done">✓</div><span class="step-lbl">Generate</span></div>
+    <span class="step-arrow">›</span>
+    <div class="step-item"><div class="step-num now">3</div><span class="step-lbl now">Claim &amp; Use</span></div>
+  </div>
+
+  <div class="actions-row">
+    <div>
+      <div class="page-title">Generated Topics</div>
+      <div class="tag-row">
+        <span class="tag">📍 ${esc(S.vertical)}</span>
+        ${focusTags}
+        <span class="tag">🎙️ ${esc(S.format)}</span>
+        ${isSessions ? `<span class="tag green">🏔️ ${totalTopics} sub-topics · ${S.topics.sessions.length} sessions</span>` : ''}
+      </div>
+    </div>
+    <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="backToConfigure()">← Reconfigure</button>
+      <button class="btn btn-primary btn-sm" onclick="generate()">🔄 Regenerate</button>
+    </div>
+  </div>
+
+  ${claimedCount>0?`<div class="info-banner">✅ <strong>${claimedCount} topic${claimedCount>1?'s':''}</strong> claimed this session</div>`:''}
+
+  ${isSessions ? renderSessions() : renderFlat()}`;
+}
+
+/* ── Report ── */
+function renderReport() {
+  let claims = loadClaims();
+  const pf = S.reportFilter.product;
+  const vf = S.reportFilter.vertical;
+  if (pf) claims = claims.filter(c => c.product === pf);
+  if (vf) claims = claims.filter(c => c.vertical === vf);
+
+  // Stats from ALL claims (unfiltered)
+  const all = loadClaims();
+  const byProduct  = {};
+  const byVertical = {};
+  all.forEach(c => {
+    byProduct[c.product]   = (byProduct[c.product]  || 0) + 1;
+    byVertical[c.vertical] = (byVertical[c.vertical]|| 0) + 1;
+  });
+  const topProduct  = Object.entries(byProduct).sort((a,b)=>b[1]-a[1])[0];
+  const topVertical = Object.entries(byVertical).sort((a,b)=>b[1]-a[1])[0];
+
+  // Unique filter options
+  const products  = [...new Set(all.map(c => c.product))].sort();
+  const verticals = [...new Set(all.map(c => c.vertical))].sort();
+
+  return `
+  <div class="report-header">
+    <div>
+      <div class="page-title">📊 Claims Report</div>
+      <div style="color:var(--text-2);font-size:14px;margin-top:3px;">All topics claimed across sessions</div>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+      ${all.length>0?`<button class="btn btn-warn btn-sm" onclick="confirmClear()">🗑️ Clear All Data</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="backFromReport()">← Back</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-num">${all.length}</div>
+      <div class="stat-lbl">Total Claims</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${Object.keys(byProduct).length}</div>
+      <div class="stat-lbl">Products Active</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${Object.keys(byVertical).length}</div>
+      <div class="stat-lbl">Verticals Covered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="font-size:16px;padding-top:4px;">${topProduct ? esc(topProduct[0]) : '—'}</div>
+      <div class="stat-lbl">Most Active Product</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="font-size:16px;padding-top:4px;">${topVertical ? esc(topVertical[0]) : '—'}</div>
+      <div class="stat-lbl">Top Vertical</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  ${all.length > 0 ? `
+  <div class="filter-row">
+    <span style="font-size:13px;color:var(--text-3);font-weight:600;">Filter by:</span>
+    <select onchange="setFilter('product',this.value)">
+      <option value="">All Products</option>
+      ${products.map(p=>`<option value="${p}" ${pf===p?'selected':''}>${p}</option>`).join('')}
+    </select>
+    <select onchange="setFilter('vertical',this.value)">
+      <option value="">All Verticals</option>
+      ${verticals.map(v=>`<option value="${v}" ${vf===v?'selected':''}>${v}</option>`).join('')}
+    </select>
+    ${(pf||vf)?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear Filters</button>`:''}
+    <span style="font-size:13px;color:var(--text-3);margin-left:4px;">${claims.length} result${claims.length!==1?'s':''}</span>
+  </div>` : ''}
+
+  <!-- Table or empty state -->
+  ${all.length === 0 ? `
+    <div class="empty-state">
+      <div class="big">📭</div>
+      <p>No topics have been claimed yet.</p>
+      <p style="margin-top:8px;font-size:13px;">Generate and claim topics to see them here.</p>
+    </div>` : claims.length === 0 ? `
+    <div class="empty-state">
+      <div class="big">🔍</div>
+      <p>No claims match your current filters.</p>
+    </div>` : `
+  <div class="report-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Claimed By</th>
+          <th>Product</th>
+          <th>Vertical</th>
+          <th>Event Focus</th>
+          <th>Format</th>
+          <th>Topic Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${claims.map((c,i) => `
+        <tr>
+          <td style="color:var(--text-3);font-size:12px;">${i+1}</td>
+          <td style="white-space:nowrap;font-size:12px;color:var(--text-3);">${formatDate(c.claimedAt)}</td>
+          <td style="font-weight:600;white-space:nowrap;">${esc(c.name)}</td>
+          <td><span class="td-badge">${esc(c.product)}</span></td>
+          <td><span class="td-badge green">${esc(c.vertical)}</span></td>
+          <td><span class="td-badge amber">${esc(c.eventType||'General')}</span></td>
+          <td style="white-space:nowrap;">${esc(c.format)}</td>
+          <td class="td-title">${esc(c.topicTitle)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════════════════════
+function pick(field, val) {
+  if (field === 'eventType') {
+    if (val === '') {
+      // "No Specific Focus" — clear all (legal opt-out)
+      S.eventTypes = [];
+    } else if (S.format === 'Summit') {
+      // Summit: toggle the focus on/off in the array
+      const already = S.eventTypes.indexOf(val);
+      S.eventTypes = already >= 0
+        ? S.eventTypes.filter(v => v !== val)
+        : [...S.eventTypes, val];
+    } else {
+      // Panel / Webinar: single-select (click again to deselect)
+      S.eventTypes = S.eventTypes[0] === val ? [] : [val];
+    }
+  } else {
+    S[field] = val;
+    // Switching format away from Summit → cap to 1 focus
+    if (field === 'format' && val !== 'Summit' && S.eventTypes.length > 1) {
+      S.eventTypes = [S.eventTypes[0]];
+    }
+  }
+  const mc = document.getElementById('mc');
+  if (mc && S.screen === 'configure') mc.innerHTML = renderConfigure();
+}
+
+function signIn() {
+  const name = (document.getElementById('inName')?.value || '').trim();
+  const prod = document.getElementById('inProd')?.value || '';
+  if (!name) { S.error = 'Please enter your name.'; render(); return; }
+  if (!prod) { S.error = 'Please select your product.'; render(); return; }
+  S.name = name; S.product = prod; S.error = null;
+  S.screen = 'configure'; render();
+}
+
+function signOut() {
+  Object.assign(S, { screen:'signin', name:'', product:'', vertical:'', eventTypes:[], format:'', topics:null, claimed:{}, loading:false, error:null, seed:0 });
+  render();
+}
+
+function backToConfigure() { S.screen = 'configure'; S.topics = null; render(); }
+function goReport()         { S.screen = 'report'; render(); }
+function backFromReport()   { S.screen = S.topics ? 'topics' : 'configure'; render(); }
+
+function generate() {
+  const legal = isLegalV(S.vertical);
+  if (!S.vertical || !S.format) return;
+  if (S.eventTypes.length === 0 && !legal) return;
+  S.seed    = Date.now() ^ (Math.random() * 0xFFFFFF | 0);
+  S.claimed = {};
+  S.loading = true;
+  S.error   = null;
+  render();
+  setTimeout(() => {
+    S.topics  = generateTopics();
+    S.loading = false;
+    S.screen  = 'topics';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 1100);
+}
+
+function claim(globalIdx) {
+  if (S.claimed[globalIdx]) return;
+  S.claimed[globalIdx] = { name: S.name, product: S.product };
+
+  // Resolve topic title + focusArea from either structure
+  let topicTitle = '', focusArea = '';
+  if (S.topics?.type === 'sessions') {
+    for (const session of S.topics.sessions) {
+      const sub = session.subTopics.find(s => s.globalIdx === globalIdx);
+      if (sub) { topicTitle = sub.title; focusArea = session.focusArea; break; }
+    }
+  } else {
+    const t = (S.topics?.topics || [])[globalIdx];
+    if (t) { topicTitle = t.title; focusArea = t.focusArea; }
+  }
+
+  // Persist to localStorage
+  const record = {
+    id:         Date.now(),
+    claimedAt:  new Date().toISOString(),
+    name:       S.name,
+    product:    S.product,
+    vertical:   S.vertical,
+    eventType:  focusArea,
+    allFocuses: S.eventTypes.join(', ') || 'General',
+    format:     S.format,
+    topicTitle: topicTitle,
+  };
+  const existing = loadClaims();
+  existing.push(record);
+  saveClaims(existing);
+
+  const mc = document.getElementById('mc');
+  if (mc) mc.innerHTML = renderTopics();
+  // Refresh header badge
+  document.querySelector('.header').outerHTML = renderHeader();
+  toast(`✅ Topic #${idx+1} claimed for ${S.product}!`);
+}
+
+function setFilter(key, val) {
+  S.reportFilter[key] = val;
+  const mc = document.getElementById('mc');
+  if (mc) mc.innerHTML = renderReport();
+}
+
+function clearFilters() {
+  S.reportFilter = { product: '', vertical: '' };
+  const mc = document.getElementById('mc');
+  if (mc) mc.innerHTML = renderReport();
+}
+
+function confirmClear() {
+  const box = document.createElement('div');
+  box.className = 'confirm-overlay';
+  box.innerHTML = `
+    <div class="confirm-box">
+      <h3>Clear All Claims Data?</h3>
+      <p>This will permanently delete all <strong>${loadClaims().length}</strong> claim records from this browser. This cannot be undone.</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="this.closest('.confirm-overlay').remove()">Cancel</button>
+        <button class="btn" style="background:var(--error);color:#fff;" onclick="clearAllData()">Yes, Clear All</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+}
+
+function clearAllData() {
+  saveClaims([]);
+  S.reportFilter = { product: '', vertical: '' };
+  document.querySelectorAll('.confirm-overlay').forEach(e => e.remove());
+  const mc = document.getElementById('mc');
+  if (mc) mc.innerHTML = renderReport();
+  toast('🗑️ All claims data cleared.');
+}
+
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(e => e.remove());
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function formatDate(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  } catch { return iso; }
+}
+function esc(s)  { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escQ(s) { return String(s??'').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
+
+// Boot
+render();
+</script>
+</body>
+</html>
